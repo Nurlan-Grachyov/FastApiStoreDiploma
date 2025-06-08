@@ -1,9 +1,10 @@
-from tortoise import fields, models
+from passlib.context import CryptContext
+from pydantic import EmailStr
+from tortoise import fields
+from fastapi_users_db_tortoise import TortoiseBaseUserModel
 
 from main import app
 from schemas import UserCreate
-
-from passlib.context import CryptContext
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -12,12 +13,15 @@ def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
 
-class User(models.Model):
+class User(TortoiseBaseUserModel):
     id = fields.IntField(pk=True)
     username = fields.CharField(max_length=50, description="Напишите свое ФИО")
-    email = fields.CharField(max_length=100, unique=True)
-    phone = fields.CharField(max_length=15, description="Телефон в формате +7XXXXXXXXXX")
+    email_or_phone: EmailStr | str = fields.CharField(..., unique=True,
+                                                      description="Введите email или номер телефона. Телефон должен быть в формате +7XXXXXXXXXX")
     password = fields.CharField(max_length=128)
+
+    class Meta:
+        table = "users"
 
 
 @app.post("/register")
@@ -27,7 +31,7 @@ async def register(user: UserCreate):
         username=user.username,
         email=user.email,
         phone=user.phone,
-        password=hashed_password
+        password=hashed_password,
     )
     await user_obj.save()
     return {"message": "Пользователь успешно зарегистрирован"}
