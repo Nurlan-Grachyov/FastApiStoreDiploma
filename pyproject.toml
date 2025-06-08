@@ -9,9 +9,19 @@ readme = "README.md"
 python = "^3.13"
 fastapi = { extras = ["all"], version = "^0.115.12" }
 uvicorn = "^0.34.3"
-tortoise-orm = "^0.25.1"
 asyncpg = "^0.30.0"
 flake8 = "^7.2.0"
+pycodestyle = "^2.13.0"
+pyflakes = "^3.3.2"
+python-dotenv = "^1.1.0"
+python-jose = "^3.5.0"
+black = "^25.1.0"
+isort = "^6.0.1"
+fastapi-users = {extras = ["simple-auth"], version = "^14.0.1"}
+psycopg2-binary = "^2.9.10"
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+tortoise-orm = "==0.18.*"
+fastapi-users-db-tortoise = "^2.0.0"
 
 [build-system]
 requires = ["poetry-core"]
