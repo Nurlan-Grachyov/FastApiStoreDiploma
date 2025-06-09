@@ -3,7 +3,9 @@ import re
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
-class UserCreate(BaseModel):
+from fastapi_users import schemas
+
+class UserCreate(schemas.BaseUserCreate):
     username: str = Field(..., max_length=50, description="Напишите свое ФИО")
     email_or_phone: EmailStr | str = Field(
         ...,
@@ -40,7 +42,7 @@ class UserCreate(BaseModel):
         return v
 
 
-class UserRead(BaseModel):
+class UserRead(schemas.BaseUser):
     email_or_phone: EmailStr | str
 
 

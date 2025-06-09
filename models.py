@@ -23,15 +23,3 @@ class User(TortoiseBaseUserModel):
     class Meta:
         table = "users"
 
-
-@app.post("/register")
-async def register(user: UserCreate):
-    hashed_password = hash_password(user.password)
-    user_obj = User(
-        username=user.username,
-        email=user.email,
-        phone=user.phone,
-        password=hashed_password,
-    )
-    await user_obj.save()
-    return {"message": "Пользователь успешно зарегистрирован"}

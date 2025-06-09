@@ -22,6 +22,7 @@ psycopg2-binary = "^2.9.10"
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 tortoise-orm = "==0.18.*"
 fastapi-users-db-tortoise = "^2.0.0"
+fastapi-mail = "^1.5.0"
 
 [build-system]
 requires = ["poetry-core"]
