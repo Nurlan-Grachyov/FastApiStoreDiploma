@@ -1,4 +1,4 @@
-from settings import DATABASE_URL
+from config.settings import DATABASE_URL
 
 from users.models import Base
 from collections.abc import AsyncGenerator
