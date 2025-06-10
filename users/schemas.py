@@ -1,9 +1,8 @@
 import re
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
-
-
 from fastapi_users import schemas
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
+
 
 class UserCreate(schemas.BaseUserCreate):
     username: str = Field(..., max_length=50, description="Напишите свое ФИО")
@@ -35,11 +34,13 @@ class UserCreate(schemas.BaseUserCreate):
             )
         return v
 
-    @field_validator("password_confirm")
-    def passwords_match(cls, v, values):
-        if "password" in values and v != values["password"]:
-            raise ValueError("Пароли не совпадают")
-        return v
+    @model_validator(mode='before')
+    def check_passwords(cls, values):
+        password = values.get('password')
+        password_confirm = values.get('password_confirm')
+        if password != password_confirm:
+            raise ValueError('Пароли не совпадают')
+        return values
 
 
 class UserRead(schemas.BaseUser):
@@ -49,3 +50,8 @@ class UserRead(schemas.BaseUser):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+
+class UserLogin(BaseModel):
+    email_or_phone: str
+    password: str
