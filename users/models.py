@@ -1,6 +1,6 @@
 from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTable
 from pydantic import EmailStr
-from sqlalchemy import Integer, String
+from sqlalchemy import Integer, String, Enum
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -21,6 +21,7 @@ class User(SQLAlchemyBaseUserTable[int], Base):
     email: Mapped[EmailStr] = mapped_column(
         String(100), unique=True, comment="Введите email в формате username@example.com"
     )
+    role: Mapped[str] = mapped_column(Enum('superuser', 'admin', 'user'), default="user")
 
     class Meta:
         table = "users"
