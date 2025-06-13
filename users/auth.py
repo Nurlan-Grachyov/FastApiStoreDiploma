@@ -1,37 +1,32 @@
 from typing import Any, Optional
-from fastapi import Request
-from fastapi_mail import ConnectionConfig, FastMail, MessageType, MessageSchema
-from fastapi_users import InvalidID, BaseUserManager, models
+
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
+from fastapi_users import BaseUserManager, InvalidID, models
 from fastapi_users.authentication import (AuthenticationBackend,
                                           BearerTransport, JWTStrategy)
 from fastapi_users.db import BaseUserDatabase
-
-from config import settings
-
-from config.settings import SECRET_KEY
-
-import bcrypt
-from fastapi import HTTPException, Depends
+from fastapi_users.password import PasswordHelper
 from passlib.context import CryptContext
+from pwdlib import PasswordHash
+from pwdlib.hashers.argon2 import Argon2Hasher
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from config import settings
 from config.database import get_session, get_user_db
+from config.settings import SECRET_KEY
 from users.models import User
 from users.schemas import UserLogin
 
 bearer_transport = BearerTransport(tokenUrl="auth/jwt/login")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+router = APIRouter()
 
 
-def hash_password(plain_password: str) -> str:
-    return bcrypt.hashpw(plain_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
-
+password_hash = PasswordHash((Argon2Hasher(),))
+password_helper = PasswordHelper(password_hash)
 
 conf = ConnectionConfig(
     MAIL_USERNAME=settings.MAIL_USERNAME,
@@ -41,13 +36,15 @@ conf = ConnectionConfig(
     MAIL_SERVER=settings.MAIL_SERVER,
     USE_CREDENTIALS=settings.USE_CREDENTIALS == "True",
     VALIDATE_CERTS=settings.VALIDATE_CERTS == "True",
-    MAIL_STARTTLS=settings.MAIL_STARTTLS == "True",
+    MAIL_STARTTLS=settings.START_TLS == "True",
     MAIL_SSL_TLS=settings.MAIL_SSL_TLS == "True",
 )
 
 
 class UserManager(BaseUserManager[User, int]):
-    def __init__(self, session: AsyncSession, user_db: BaseUserDatabase[models.UP, models.ID]):
+    def __init__(
+        self, session: AsyncSession, user_db: BaseUserDatabase[models.UP, models.ID]
+    ):
         super().__init__(user_db)
         self.session = session
 
@@ -85,15 +82,22 @@ class UserManager(BaseUserManager[User, int]):
             raise ValueError("Введите номер телефона или email")
 
         user = result.scalars().first()
-        if not user or not verify_password(credentials.password, user.hashed_password):
-            raise HTTPException(
-                status_code=401,
-                detail="Invalid credentials"
-            )
+        verified, updated_password_hash = password_helper.verify_and_update(
+            credentials.password, user.hashed_password
+        )
+        if not verified:
+            raise HTTPException(status_code=401, detail="Неверный пароль")
+
+        if updated_password_hash:
+            user.hashed_password = updated_password_hash
+            await self.session.commit()
+
         return user
 
 
-async def get_user_manager(session: AsyncSession = Depends(get_session), user_db=Depends(get_user_db)):
+async def get_user_manager(
+    session: AsyncSession = Depends(get_session), user_db=Depends(get_user_db)
+):
     yield UserManager(session, user_db)
 
 
@@ -106,3 +110,17 @@ auth_backend = AuthenticationBackend(
     transport=bearer_transport,
     get_strategy=get_jwt_strategy,
 )
+
+
+@router.post("/login")
+async def login(data: UserLogin, user_manager: UserManager = Depends(get_user_manager)):
+    user = await user_manager.authenticate(data)
+    return {"message": "Successfully logged in", "user_id": user.id}
+
+
+# @router.post("/logout")
+# async def logout(response: Response):
+#     """Завершаем сеанс пользователя, удаляя cookie с токеном."""
+#     print(f"это данные запроса {response.body}")
+#     response.delete_cookie("access-token")
+#     return {"detail": "Logged out successfully."}

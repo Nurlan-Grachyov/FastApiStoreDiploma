@@ -1,9 +1,10 @@
-from logging.config import fileConfig
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
-from alembic import context, command
-import os
 import asyncio
+import os
+from logging.config import fileConfig
+
+from sqlalchemy import engine_from_config, pool
+
+from alembic import command, context
 from users.models import Base
 
 # this is the Alembic Config object, which provides
@@ -47,7 +48,7 @@ async def run_migrations_online():
     connect_args["server_settings"] = {"async_mode": "aiohttp"}
     connectable = engine_from_config(
         config.get_section(config.config_ini_section),
-        prefix='sqlalchemy.',
+        prefix="sqlalchemy.",
         poolclass=pool.NullPool,
         connect_args=connect_args,
     )
@@ -60,7 +61,7 @@ async def run_migrations_online():
         )
 
         with context.begin_transaction():
-            command.upgrade(connection, 'head')
+            command.upgrade(connection, "head")
 
 
 if __name__ == "__main__":

@@ -2,13 +2,17 @@ import re
 from typing import Optional
 
 from fastapi_users import schemas
-from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
+from pydantic import (BaseModel, EmailStr, Field, field_validator,
+                      model_validator)
+from pydantic_core.core_schema import ValidationInfo
 
 
 class UserCreate(schemas.BaseUserCreate):
     username: str = Field(..., max_length=150, description="Напишите свое ФИО")
     phone: str = Field(..., description="Телефон должен быть в формате +7XXXXXXXXXX")
-    email: EmailStr = Field(..., max_length=100, description="Введите email в формате username@example.com")
+    email: EmailStr = Field(
+        ..., max_length=100, description="Введите email в формате username@example.com"
+    )
     password: str = Field(..., min_length=8)
     password_confirm: str = Field(..., min_length=8)
 
@@ -30,14 +34,12 @@ class UserCreate(schemas.BaseUserCreate):
             )
         return v
 
-    @model_validator(mode='before')
-    def check_passwords(cls, values):
-        print(type(values))
-        password = values.get('password')
-        password_confirm = values.get('password_confirm')
-        if password != password_confirm:
-            raise ValueError('Пароли не совпадают')
-        return values
+    @model_validator(mode="after")
+    def check_passwords(cls, obj: "UserCreate"):
+        if obj.password != obj.password_confirm:
+            raise ValueError("Пароли не совпадают")
+        delattr(obj, "password_confirm")
+        return obj
 
 
 class UserRead(schemas.BaseUser):
@@ -64,8 +66,9 @@ class UserLogin(BaseModel):
     password: str
 
     @model_validator(mode="after")
-    def check_email_or_phone(cls, v, values):
-        """ Валидатор проверяет наличие хотя бы одного поля из двух: phone или email. Если оба пустые, выбрасывается ошибка ValidationError. """
-        if not any([values.get('phone'), values.get('email')]):
-            raise ValueError('Необходимо заполнить хотя бы один из полей: телефон или e-mail.')
-        return v
+    def check_email_or_phone(cls, instance, info: ValidationInfo):
+        if not (instance.phone or instance.email):
+            raise ValueError(
+                "Необходимо заполнить хотя бы один из полей: телефон или e-mail."
+            )
+        return instance

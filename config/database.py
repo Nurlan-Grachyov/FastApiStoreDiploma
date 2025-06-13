@@ -1,15 +1,12 @@
-from config.settings import DATABASE_URL
-
-from users.models import Base
 from collections.abc import AsyncGenerator
 
-from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-
 from fastapi import Depends
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
+from sqlalchemy.ext.asyncio import (AsyncSession, async_sessionmaker,
+                                    create_async_engine)
 
-from users.models import User
+from config.settings import DATABASE_URL
+from users.models import Base, User
 
 engine = create_async_engine(DATABASE_URL, echo=True)
 AsyncSessionLocal = async_sessionmaker(bind=engine, expire_on_commit=False)

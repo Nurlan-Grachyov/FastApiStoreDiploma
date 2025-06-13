@@ -13,9 +13,14 @@ class User(SQLAlchemyBaseUserTable[int], Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     username: Mapped[str] = mapped_column(String(150), comment="Напишите свое ФИО")
-    phone: Mapped[str] = mapped_column(String(12), unique=True,
-                                                comment="Введите email или номер телефона. Телефон должен быть в формате +7XXXXXXXXXX")
-    email: Mapped[EmailStr] = mapped_column(String(100), unique=True, comment="Введите email в формате username@example.com")
+    phone: Mapped[str] = mapped_column(
+        String(12),
+        unique=True,
+        comment="Введите email или номер телефона. Телефон должен быть в формате +7XXXXXXXXXX",
+    )
+    email: Mapped[EmailStr] = mapped_column(
+        String(100), unique=True, comment="Введите email в формате username@example.com"
+    )
 
     class Meta:
         table = "users"
