@@ -1,6 +1,5 @@
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy import String, Integer, DateTime, func, text, Boolean
-from tomlkit.items import Bool
 
 
 class Base(DeclarativeBase):
