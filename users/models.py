@@ -21,7 +21,7 @@ class User(SQLAlchemyBaseUserTable[int], Base):
     email: Mapped[EmailStr] = mapped_column(
         String(100), unique=True, comment="Введите email в формате username@example.com"
     )
-    role: Mapped[str] = mapped_column(Enum('superuser', 'admin', 'user'), default="user")
+    role: Mapped[str] = mapped_column(Enum('superuser', 'admin', 'user',  name="roles"), default="user")
 
     class Meta:
         table = "users"
