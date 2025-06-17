@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import (AsyncSession, async_sessionmaker,
                                     create_async_engine)
 
 from config.settings import DATABASE_URL
+from products.models import Product
 from users.models import Base, User
 
 engine = create_async_engine(DATABASE_URL, echo=True)
@@ -24,8 +25,3 @@ async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
 
 async def get_user_db(session: AsyncSession = Depends(get_async_session)):
     yield SQLAlchemyUserDatabase(session, User)
-
-
-async def get_session() -> AsyncGenerator[AsyncSession, None]:
-    async with AsyncSessionLocal() as session:
-        yield session

@@ -1,5 +1,5 @@
 import re
-from typing import Optional, Literal
+from typing import Literal, Optional
 
 from fastapi_users import schemas
 from pydantic import (BaseModel, EmailStr, Field, field_validator,
@@ -15,7 +15,9 @@ class UserCreate(schemas.BaseUserCreate):
     )
     password: str = Field(..., min_length=8)
     password_confirm: str = Field(..., min_length=8)
-    role: Literal["superuser", "admin", "user"] = Field(description="Роль пользователя", default="user")
+    role: Literal["superuser", "admin", "user"] = Field(
+        description="Роль пользователя", default="user"
+    )
 
     @field_validator("phone")
     def validator_email_or_phone(cls, v):

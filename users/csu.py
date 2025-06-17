@@ -1,7 +1,8 @@
+import asyncio
+
+from config.database import AsyncSessionLocal
 from users.auth import password_helper
 from users.models import User
-from config.database import AsyncSessionLocal
-import asyncio
 
 
 async def create_superuser():
@@ -14,7 +15,7 @@ async def create_superuser():
             role="superuser",
             is_active=True,
             is_superuser=True,
-            is_verified=True
+            is_verified=True,
         )
 
         session.add(superuser)
