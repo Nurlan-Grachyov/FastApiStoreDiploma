@@ -3,11 +3,13 @@ from typing import Any, Optional
 from fastapi import Depends, HTTPException, Request
 from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
 from fastapi_users import BaseUserManager, InvalidID, models
-from fastapi_users.authentication import (AuthenticationBackend,
-                                          BearerTransport, JWTStrategy)
+from fastapi_users.authentication import (
+    AuthenticationBackend,
+    BearerTransport,
+    JWTStrategy,
+)
 from fastapi_users.db import BaseUserDatabase
 from fastapi_users.password import PasswordHelper
-from passlib.context import CryptContext
 from pwdlib import PasswordHash
 from pwdlib.hashers.argon2 import Argon2Hasher
 from sqlalchemy import select
@@ -20,9 +22,6 @@ from users.models import User
 from users.schemas import UserLogin
 
 bearer_transport = BearerTransport(tokenUrl="auth/jwt/login")
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 
 password_hash = PasswordHash((Argon2Hasher(),))
 password_helper = PasswordHelper(password_hash)
@@ -109,7 +108,6 @@ auth_backend = AuthenticationBackend(
     transport=bearer_transport,
     get_strategy=get_jwt_strategy,
 )
-
 
 # @router.post("/logout")
 # async def logout(response: Response):

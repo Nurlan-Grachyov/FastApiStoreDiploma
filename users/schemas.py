@@ -2,8 +2,7 @@ import re
 from typing import Literal, Optional
 
 from fastapi_users import schemas
-from pydantic import (BaseModel, EmailStr, Field, field_validator,
-                      model_validator)
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 from pydantic_core.core_schema import ValidationInfo
 
 

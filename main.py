@@ -3,8 +3,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from config.database import create_db_and_tables
+from products.view import products_router
 from users.routers import register_user, user_router, users_router
-from products.routers import products_router
 
 
 @asynccontextmanager
