@@ -45,9 +45,10 @@ class UserCreate(schemas.BaseUserCreate):
 
 
 class UserRead(schemas.BaseUser):
+    username: str
     phone: str
     email: EmailStr
-
+    role: str
 
 class UserUpdate(schemas.BaseUserUpdate):
     phone: str | None

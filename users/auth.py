@@ -3,11 +3,7 @@ from typing import Any, Optional
 from fastapi import Depends, HTTPException, Request
 from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
 from fastapi_users import BaseUserManager, InvalidID, models
-from fastapi_users.authentication import (
-    AuthenticationBackend,
-    BearerTransport,
-    JWTStrategy,
-)
+
 from fastapi_users.db import BaseUserDatabase
 from fastapi_users.password import PasswordHelper
 from pwdlib import PasswordHash
@@ -16,12 +12,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
-from config.database import get_async_session, get_user_db
+from dependencies.database import get_async_session, get_user_db
 from config.settings import SECRET_KEY
 from users.models import User
 from users.schemas import UserLogin
-
-bearer_transport = BearerTransport(tokenUrl="auth/jwt/login")
 
 password_hash = PasswordHash((Argon2Hasher(),))
 password_helper = PasswordHelper(password_hash)
@@ -41,7 +35,7 @@ conf = ConnectionConfig(
 
 class UserManager(BaseUserManager[User, int]):
     def __init__(
-        self, session: AsyncSession, user_db: BaseUserDatabase[models.UP, models.ID]
+            self, session: AsyncSession, user_db: BaseUserDatabase[models.UP, models.ID]
     ):
         super().__init__(user_db)
         self.session = session
@@ -94,24 +88,6 @@ class UserManager(BaseUserManager[User, int]):
 
 
 async def get_user_manager(
-    session: AsyncSession = Depends(get_async_session), user_db=Depends(get_user_db)
+        session: AsyncSession = Depends(get_async_session), user_db=Depends(get_user_db)
 ):
     yield UserManager(session, user_db)
-
-
-def get_jwt_strategy() -> JWTStrategy:
-    return JWTStrategy(secret=SECRET_KEY, lifetime_seconds=3600)
-
-
-auth_backend = AuthenticationBackend(
-    name="jwt",
-    transport=bearer_transport,
-    get_strategy=get_jwt_strategy,
-)
-
-# @router.post("/logout")
-# async def logout(response: Response):
-#     """Завершаем сеанс пользователя, удаляя cookie с токеном."""
-#     print(f"это данные запроса {response.body}")
-#     response.delete_cookie("access-token")
-#     return {"detail": "Logged out successfully."}

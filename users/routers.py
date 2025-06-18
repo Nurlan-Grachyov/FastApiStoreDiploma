@@ -1,14 +1,10 @@
-from fastapi import APIRouter, Depends
-from fastapi_users import FastAPIUsers
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi_users.jwt import generate_jwt
 
-from users.auth import UserManager, auth_backend, get_user_manager
-from users.models import User
+from config.settings import SECRET_KEY
+from dependencies.fastapi_users_instance import fastapi_users
+from users.auth import UserManager, get_user_manager
 from users.schemas import UserCreate, UserLogin, UserRead, UserUpdate
-
-fastapi_users = FastAPIUsers[User, int](
-    get_user_manager,
-    [auth_backend],
-)
 
 user_router = APIRouter(tags=["Users"])
 
@@ -34,4 +30,7 @@ def users_router(app):
 @user_router.post("/login")
 async def login(data: UserLogin, user_manager: UserManager = Depends(get_user_manager)):
     user = await user_manager.authenticate(data)
-    return {"message": "Successfully logged in", "user_id": user.id}
+    if not user:
+        raise HTTPException(status_code=401, detail="Incorrect username or password")
+    access_token = generate_jwt({"sub": str(user.id)}, secret=SECRET_KEY, lifetime_seconds=3600)
+    return {"access_token": access_token, "token_type": "bearer"}

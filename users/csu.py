@@ -1,6 +1,6 @@
 import asyncio
 
-from config.database import AsyncSessionLocal
+from dependencies.database import AsyncSessionLocal
 from users.auth import password_helper
 from users.models import User
 
