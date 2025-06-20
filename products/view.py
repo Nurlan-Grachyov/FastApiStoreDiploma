@@ -12,8 +12,9 @@ products_router = APIRouter(tags=["Products"])
 
 
 @products_router.post("/create_product", response_model=ProductCreate)
-async def create_product(product: ProductCreate, db: AsyncSession = Depends(get_async_session),
-                         current_user=Depends(fastapi_users.current_user())):
+async def create_product(product: ProductCreate, current_user=Depends(fastapi_users.current_user()),
+                         db: AsyncSession = Depends(get_async_session)):
+    print(current_user)
     if current_user.role == "admin":
         db_product = Product(**product.model_dump())
         db.add(db_product)
