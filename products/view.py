@@ -4,17 +4,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from dependencies.database import get_async_session
-from dependencies.fastapi_users_instance import fastapi_users
+from dependencies.fastapi_users_instance import fastapi_users, get_jwt_strategy
 from products.models import Product
 from products.schemas import ProductCreate, ProductRead, ProductUpdate
 
 products_router = APIRouter(tags=["Products"])
+current_user = fastapi_users.current_user()
 
-
-@products_router.post("/create_product", response_model=ProductCreate)
-async def create_product(product: ProductCreate, current_user=Depends(fastapi_users.current_user()),
+@products_router.post("/create_product", dependencies=[Depends(current_user)], response_model=ProductCreate)
+async def create_product(product: ProductCreate, user=Depends(current_user),
                          db: AsyncSession = Depends(get_async_session)):
-    print(current_user)
+    print(user)
     if current_user.role == "admin":
         db_product = Product(**product.model_dump())
         db.add(db_product)
@@ -30,7 +30,7 @@ async def create_product(product: ProductCreate, current_user=Depends(fastapi_us
 
 @products_router.get("/get_product", response_model=ProductRead)
 async def get_product(id_product: int, db: AsyncSession = Depends(get_async_session),
-                      current_user=Depends(fastapi_users.current_user())):
+                      user=Depends(current_user)):
     result = await db.execute(select(Product).where(Product.id == id_product))
     product = result.scalar_one_or_none()
     if product is None:
@@ -43,7 +43,7 @@ async def update_product(
         id_product: int,
         product_update: ProductUpdate,
         db: AsyncSession = Depends(get_async_session),
-        current_user=Depends(fastapi_users.current_user())
+        user=Depends(current_user)
 ):
     result = await db.execute(select(Product).where(Product.id == id_product))
     product = result.scalar_one_or_none()
@@ -59,7 +59,7 @@ async def update_product(
 
 @products_router.delete("/delete_product")
 async def delete_product(id_product: int, db: AsyncSession = Depends(get_async_session),
-                         current_user=Depends(fastapi_users.current_user())):
+                         user=Depends(current_user)):
     result = await db.execute(select(Product).where(Product.id == id_product))
     product = result.scalar_one_or_none()
     if product is None:
